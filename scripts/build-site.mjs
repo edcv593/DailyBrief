@@ -44,6 +44,19 @@ const latestHtml = fs
 fs.writeFileSync(path.join(ROOT, "index.html"), latestHtml, "utf8");
 console.log(`[build-site] index.html  ← ${latest}/${latest}.html`);
 
+// JSON entry point for the HotTDaily frontend. Keep the report schema intact
+// so the static page and the SPA can consume the same generated artifact.
+const latestJsonPath = path.join(ROOT, latest, `${latest}.json`);
+if (fs.existsSync(latestJsonPath)) {
+  const latestReport = JSON.parse(fs.readFileSync(latestJsonPath, "utf8"));
+  fs.writeFileSync(
+    path.join(ROOT, "index.json"),
+    JSON.stringify({ date: latest, ...latestReport }, null, 2),
+    "utf8",
+  );
+  console.log(`[build-site] index.json  ← ${latest}/${latest}.json`);
+}
+
 // --- archive.html = list of all reports ---
 const rows = dates
   .map((d) => {
@@ -108,6 +121,14 @@ ${rows}
 `;
 fs.writeFileSync(path.join(ROOT, "archive.html"), archiveHtml, "utf8");
 console.log(`[build-site] archive.html (${dates.length} dates)`);
+
+const archiveJson = dates.map((date) => ({
+  date,
+  html: `./${date}/${date}.html`,
+  json: `./${date}/${date}.json`,
+}));
+fs.writeFileSync(path.join(ROOT, "archive.json"), JSON.stringify(archiveJson, null, 2), "utf8");
+console.log(`[build-site] archive.json (${dates.length} dates)`);
 
 // .nojekyll prevents GitHub Pages from running Jekyll, which would otherwise
 // strip directories whose names start with "_". We don't have any today but
